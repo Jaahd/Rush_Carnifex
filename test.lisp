@@ -1,7 +1,4 @@
-(defstruct cell
-              (gen 0)
-              (life 0)
- )
+(defstruct cell (gen 0) (life 0))
 
 ; couper en 2 fonction et ajouter un si x =0 ou y = 0 ou x = width ou y = height
 (defun neighbours (grid x y)
@@ -27,6 +24,36 @@
       ))
   )
 
+(defun print_grid_life (grid height width)
+  (write-line "life")
+  (dotimes (x width)
+    (dotimes (y height)
+      (write (cell-life (aref grid x y)))
+      (format t " ")
+      )
+    (write-line "")
+    )
+  )
+
+(defun print_grid_gen (grid height width)
+  (write-line "gen")
+  (dotimes (x width)
+    (dotimes (y height)
+      (write (cell-gen (aref grid x y)))
+      (format t " ")
+      )
+    (write-line "")
+    )
+  )
+
+(defun swap_life_gen (grid height width)
+  (write-line "swap")
+  (dotimes (x width)
+    (dotimes (y height)
+      (setf (cell-gen (aref grid x y)) (cell-life (aref grid x y)))
+      )
+    )
+  )
 
 (defun create-table (lines columns)
   (let ((grid (make-array `(,lines ,columns))))
@@ -34,20 +61,26 @@
       (dotimes (y columns)
         (setf (aref grid x y) (make-cell))
         )
-    )
-;    (setf (aref grid 4 5) (make-cell))
-;    (setf (aref grid 5 6) 1)
-;    (setf (aref grid 6 6) 1)
-;    (setf (aref grid 6 5) 1)
-;    (setf (aref grid 6 4) 1)
-    (write grid )
-;    (write-line "")
-;    ; ajouter colones extérieurs
-;    (loop for x from 1 to 8 
-;          do (loop for y from 1 to 8
-;                   do (check_neighbours grid x y)))
-;    (write grid )
-    ; fonction qui va modifier la valeur de la case et la somme des cases autour
+      )
+    (setf (cell-gen (aref grid 4 5)) 1)
+    (setf (cell-gen (aref grid 5 6)) 1)
+    (setf (cell-gen (aref grid 6 6)) 1)
+    (setf (cell-gen (aref grid 6 5)) 1)
+    (setf (cell-gen (aref grid 6 4)) 1)
+
+    (setf (cell-life (aref grid 9 9)) 9)
+    (print_grid_gen grid lines columns)
+    (print_grid_life grid lines columns)
+    (write-line "")
+    ; ajouter colones extérieurs
+    ;    (loop for x from 1 to (- columns 1)
+    ;          do (loop for y from 1 to (- lines 1)
+    ;                   do (check_neighbours grid x y)))
+    (print_grid_gen grid lines columns)
+    (print_grid_life grid lines columns)
+    (swap_life_gen grid lines columns)
+    (print_grid_gen grid lines columns)
+    (print_grid_life grid lines columns)
     )
   )
 
@@ -60,3 +93,7 @@
 ; t0 : grille de départ avec gen = live
 ; t1 : live = live_neighbours
 ; t2 : gen = 1 ou 0 en fonction de live
+
+
+; x = width = columns
+; y = height = lines
