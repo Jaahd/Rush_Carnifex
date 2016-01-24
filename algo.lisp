@@ -1,5 +1,3 @@
-(load "sdl.lisp")
-
 (defstruct cell (gen 0) (life 0))
 
 (defun neighbours (grid x y pos_x pos_y) "'add neighbours value with correct conditions' function"
@@ -100,7 +98,6 @@
 ;   )
 
 (defun swap_life_gen (grid pos_x pos_y) "'swap gen and life' function"
-  (write-line "swap")
   (dotimes (x pos_x)
     (dotimes (y pos_y)
       (if (or (and (= (cell-gen (aref grid x y)) 0) (= (cell-life (aref grid x y)) 3))
@@ -112,7 +109,6 @@
   )
 
 (defun grid_loop (grid pos_x pos_y) ""
-  (write-line "check")
   (loop for x from 0 to (- pos_x 1)
         do (loop for y from 0 to (- pos_y 1)
                  do (check_neighbours grid x y (- pos_x 1) (- pos_y 1))
@@ -122,10 +118,99 @@
   )
 
 (defun give_birth (grid x y)
+  (if (= (cell-gen (aref grid x y)) 0)
   (setf (cell-gen (aref grid x y)) 1)
+  (setf (cell-gen (aref grid x y)) 0)
+  )
   )
 
-(defun create-table (pos_x pos_y) "grid ceation and initialization function"
+(defun reset_grid (grid pos_x pos_y)
+    (dotimes (x pos_x)
+      (dotimes (y pos_y)
+        (setf (cell-gen (aref grid x y)) 0)
+        (setf (cell-life (aref grid x y)) 0)
+        )
+      )
+  )
+
+; gen . live
+; gen = 1 ou 0
+; live = 0+ (= live_neighbours)
+; t0 : grille de départ avec gen = live
+; t1 : live = live_neighbours
+; t2 : gen = 1 ou 0 en fonction de live
+
+
+; x = pos_x = pos_y
+; y = pos_y = pos_x
+
+(ql:quickload "lispbuilder-sdl")
+
+(defparameter *random-color* sdl:*white*)
+
+(defun main_loop (grid width height sl_time p_time)
+  (if p_time
+    (grid_loop grid width height)
+    )
+  (sleep sl_time)
+  )
+
+(defun draw-win (grid width height)
+  (let ((sl_time 0.1) (p_time nil))
+  (sdl:with-init ()
+                 (sdl:window 1080 720 :title-caption "Carniflex -- Game of Life")
+                 (setf (sdl:frame-rate) 40)
+                 (sdl:with-events ()
+                                  (:key-down-event (:key key :mod mod)
+                                                   (when (sdl:key= key :sdl-key-escape) (exit))
+                                                   (when (and (or (= mod 1) (= mod 2)) (sdl:key= key :sdl-key-comma)) (setf sl_time (+ sl_time 0.1)))
+                                                   (when (and (or (= mod 1) (= mod 2)) (sdl:key= key :sdl-key-period)) (if (< (- sl_time 0.1) 0.1) (setf sl_time 0.1) (setf sl_time (- sl_time 0.1))))
+                                          ;         (when (sdl:key= key :sdl-key-w) (exit))
+                                          ;         (when (sdl:key= key :sdl-key-a) (exit))
+                                          ;         (when (sdl:key= key :sdl-key-s) (exit))
+                                          ;         (when (sdl:key= key :sdl-key-d) (exit))
+                                                   (when (sdl:key= key :sdl-key-p) (if (null p_time) (setf p_time t) (setf p_time nil)))
+                                                   (when (sdl:key= key :sdl-key-r) (reset_grid grid width height))
+                                          ;         (when (sdl:key= key :sdl-key-minus) (exit))
+                                          ;         (when (and (or (= mod 1) (= mod 2)) (sdl:key= key :sdl-key-equals)) (exit))
+                                                   )
+                                  (:mouse-button-up-event (:button button :x x :y y)
+                                                          (format t "bu:~a x:~a y:~a ~%" button x y)
+                                                          )
+
+                                  ;(setf (sdl:frame-rate) 5)
+                                  ;				 (sdl:clear-display sdl:*black*)
+                                  (:quit-event () t)
+                                  (:idle ()
+                                         ;										 (loop for y from 1 to (/ width 10) do
+                                         ;										 (sdl:draw-line-* () () () height)
+                                         ;											   ((loop for x from 1 to (/ height 10) do
+                                         ;													  (
+                                         ;													   (sdl:draw-line-* () () () ())
+                                         ;													   )
+                                         ;													  )
+                                         ;											   )
+
+                                         ;										 (sdl:draw-line-* 500 40 500 400)
+                                         ;										 (sdl:draw-box (sdl:rectangle-from-midpoint-* (sdl:mouse-x) (sdl:mouse-y) 20 20)
+                                         ;													   :color *random-color*)
+                                         (main_loop grid width height sl_time p_time)
+                                         (sdl:update-display)
+                                         (sdl:clear-display sdl:*black*)
+                                         )
+                                  )
+                 )
+  )
+  )
+
+(defun start (grid pos_x pos_y)
+  (sb-int:with-float-traps-masked (:invalid :inexact :overflow)(draw-win grid pos_x pos_y))
+  )
+
+; grid_loop grid pos_x pos_y
+; give_birth grid x y
+
+(defun create-grid (pos_x pos_y) "grid ceation and initialization function"
   (let ((grid (make-array `(,pos_x ,pos_y))))
     (dotimes (x pos_x)
       (dotimes (y pos_y)
@@ -176,7 +261,7 @@ optional arguments:
     (let ((pos_x (parse-integer (nth 2 arg))))
       (if (or (<= pos_x 0) (<= pos_y 0))
         (usage)
-        (create-table pos_x pos_y)
+        (create-grid pos_x pos_y)
         )
       )
     )
@@ -192,14 +277,3 @@ optional arguments:
 
 (main sb-ext:*posix-argv*)
 (exit)
-
-; gen . live
-; gen = 1 ou 0
-; live = 0+ (= live_neighbours)
-; t0 : grille de départ avec gen = live
-; t1 : live = live_neighbours
-; t2 : gen = 1 ou 0 en fonction de live
-
-
-; x = pos_x = pos_y
-; y = pos_y = pos_x
