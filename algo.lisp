@@ -97,15 +97,31 @@
     )
   )
 
+; si 0 et 3 OK
+; si 1 et (2 ou 3) OK
 (defun swap_life_gen (grid pos_x pos_y) "'swap gen and life' function"
   (write-line "swap")
   (dotimes (x pos_x)
     (dotimes (y pos_y)
-      (if (or (= (cell-life (aref grid x y)) 3) (= (cell-life (aref grid x y)) 4))
+      (if (or (and (= (cell-gen (aref grid x y)) 0) (= (cell-life (aref grid x y)) 3))
+            (and (= (cell-gen (aref grid x y)) 1) (or (= (cell-life (aref grid x y)) 3) (= (cell-life (aref grid x y)) 4))))
         (setf (cell-gen (aref grid x y)) 1)
         (setf (cell-gen (aref grid x y)) 0)
         ))
     )
+  )
+
+(defun grid_loop (grid pos_x pos_y) ""
+  (write-line "check")
+  (loop for x from 0 to (- pos_x 1)
+        do (loop for y from 0 to (- pos_y 1)
+                 do (check_neighbours grid x y (- pos_x 1) (- pos_y 1))
+                 )
+        )
+  )
+
+(defun give_birth (grid x y)
+  (setf (cell-gen (aref grid x y)) 1)
   )
 
 (defun create-table (pos_x pos_y) "grid ceation and initialization function"
@@ -115,34 +131,63 @@
         (setf (aref grid x y) (make-cell))
         )
       )
-    (setf (cell-gen (aref grid 4 5)) 1)
+    (give_birth grid 4 5)
     (setf (cell-gen (aref grid 5 6)) 1)
     (setf (cell-gen (aref grid 6 6)) 1)
     (setf (cell-gen (aref grid 6 5)) 1)
     (setf (cell-gen (aref grid 6 4)) 1)
 
-; a virer --v
+    ; a virer --v
     (print_grid_gen grid pos_x pos_y)
     (print_grid_life grid pos_x pos_y)
 
-; a mettre dans une autre fonction ---v
-    (write-line "check")
-    (loop for x from 0 to (- pos_x 1)
-          do (loop for y from 0 to (- pos_y 1)
-                   do (check_neighbours grid x y (- pos_x 1) (- pos_y 1))
-                   )
+    (loop for aaaa from 0 to 5
+          do (grid_loop grid pos_x pos_y)
+          do (swap_life_gen grid pos_x pos_y)
+          do (print_grid_gen grid pos_x pos_y)
+          do (print_grid_life grid pos_x pos_y)
           )
-
-; a virer ---v
-    (print_grid_gen grid pos_x pos_y)
-    (print_grid_life grid pos_x pos_y)
-    (swap_life_gen grid pos_x pos_y)
+    ; fonction qui creer la fenetre et tout
+    ;(start grid pos_x pos_y)
+    ; a virer ---v
     (print_grid_gen grid pos_x pos_y)
     (print_grid_life grid pos_x pos_y)
     )
   )
 
-(create-table 10 10)
+(defun usage()
+  (format t "usage: sbcl --load game_of_life.lsp [-h] width height
+
+positional arguments:
+  width                  width of the grid
+
+  height                 height of the grid
+
+optional arguments:
+  -h, --help             show this help message and exit~&"
+    )
+  )
+
+(defun get_arg (arg)
+  (let ((pos_y (parse-integer (nth 1 arg))))
+    (let ((pos_x (parse-integer (nth 2 arg))))
+      (if (or (<= pos_x 0) (<= pos_y 0))
+        (usage)
+        (create-table pos_x pos_y)
+        )
+      )
+    )
+  )
+
+
+(defun main (arg)
+  (if (/= (list-length arg) 3)
+    (usage)
+    (get_arg arg)
+    )
+  )
+
+(main sb-ext:*posix-argv*)
 (exit)
 
 ; gen . live
