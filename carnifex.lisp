@@ -1,7 +1,5 @@
 (defstruct cell (gen 0) (life 0))
 
-(ql:quickload "lispbuilder-sdl")
-
 (defun neighbours (grid x y pos_x pos_y) "'add neighbours value with correct conditions' function"
   (cond ((and (= x  0) (= y 0)) (+
                                   (cell-gen (aref grid x  y))
@@ -81,7 +79,7 @@
   (dotimes (x pos_x)
     (dotimes (y pos_y)
       (if (or (and (= (cell-gen (aref grid x y)) 0) (= (cell-life (aref grid x y)) 3))
-            (and (= (cell-gen (aref grid x y)) 1) (or (= (cell-life (aref grid x y)) 3) (= (cell-life (aref grid x y)) 4))))
+              (and (= (cell-gen (aref grid x y)) 1) (or (= (cell-life (aref grid x y)) 3) (= (cell-life (aref grid x y)) 4))))
         (setf (cell-gen (aref grid x y)) 1)
         (setf (cell-gen (aref grid x y)) 0)
         ))
@@ -99,36 +97,35 @@
 
 (defun give_birth (grid x y)
   (if (= (cell-gen (aref grid x y)) 0)
-  (setf (cell-gen (aref grid x y)) 1)
-  (setf (cell-gen (aref grid x y)) 0)
-  )
+    (setf (cell-gen (aref grid x y)) 1)
+    (setf (cell-gen (aref grid x y)) 0)
+    )
   )
 
 (defun reset_grid (grid pos_x pos_y)
-    (dotimes (x pos_x)
-      (dotimes (y pos_y)
-        (setf (cell-gen (aref grid x y)) 0)
-        (setf (cell-life (aref grid x y)) 0)
-        )
+  (dotimes (x pos_x)
+    (dotimes (y pos_y)
+      (setf (cell-gen (aref grid x y)) 0)
+      (setf (cell-life (aref grid x y)) 0)
       )
+    )
   )
 
+(ql:quickload "lispbuilder-sdl")
 
-(defparameter *random-color* sdl:*blue*)
+(defparameter *random-color* sdl:*cyan*)
 
 (defun main_loop (grid width height sl_time p_time)
   (loop for i from 0 to (- width 1) do
         (loop for j from 0 to (- height 1) do
-              ;			  (format t "~d" (cell-gen (aref grid i j)))
               (if (= (cell-gen (aref grid i j)) 1)
-                ;				  (sdl:draw-rectangle-* :x 432 :y 360 :w 540 :h 432)
                 (sdl:draw-box (sdl:rectangle :x (floor (* 1200 (/ i width))) :y (floor (* 1200 (/ j height))) :w (floor (/ 1200 width)) :h (floor (/ 1200 height))) :color (sdl:color :r 100 :g 100 :b 100))
                 (sdl:draw-box (sdl:rectangle :x (floor (* 1200 (/ i width))) :y (floor (* 1200 (/ j height))) :w (floor (/ 1200 width)) :h (floor (/ 1200 height))) :color sdl:*black*)
                 )
               )
         )
   (if p_time
-	  (progn (sleep sl_time) (grid_loop grid width height))
+    (progn (sleep sl_time) (grid_loop grid width height))
     )
   )
 
@@ -137,33 +134,27 @@
     (sdl:with-init ()
                    (sdl:window 1200 1200 :title-caption "Carniflex -- Game of Life")
                    (setf (sdl:frame-rate) 40)
-				   (loop for k from 1 to width do
-						 (sdl:draw-line-* (floor (* 1200 (/ k width))) 0 (floor (* 1200 (/ k width)))  1200 :color *random-color*))
-				   (loop for l from 1 to height do
-						 (sdl:draw-line-* 0 (floor (* 1200 (/ l height))) 1200 (floor (* 1200 (/ l height))) :color *random-color*))
+                   (loop for k from 1 to width do
+                         (sdl:draw-line-* (floor (* 1200 (/ k width))) 0 (floor (* 1200 (/ k width)))  1200 :color *random-color*))
+                   (loop for l from 1 to height do
+                         (sdl:draw-line-* 0 (floor (* 1200 (/ l height))) 1200 (floor (* 1200 (/ l height))) :color *random-color*))
                    (sdl:with-events ()
                                     (:key-down-event (:key key :mod mod)
                                                      (when (sdl:key= key :sdl-key-escape) (exit))
                                                      (when (and (or (= mod 1) (= mod 2)) (sdl:key= key :sdl-key-comma)) (setf sl_time (+ sl_time 0.1)))
                                                      (when (and (or (= mod 1) (= mod 2)) (sdl:key= key :sdl-key-period)) (if (< (- sl_time 0.1) 0.1) (setf sl_time 0.1) (setf sl_time (- sl_time 0.1))))
-                                                     ;         (when (sdl:key= key :sdl-key-w) (exit))
-                                                     ;         (when (sdl:key= key :sdl-key-a) (exit))
-                                                     ;         (when (sdl:key= key :sdl-key-s) (exit))
-                                                     ;         (when (sdl:key= key :sdl-key-d) (exit))
                                                      (when (sdl:key= key :sdl-key-p) (if (null p_time) (setf p_time t) (setf p_time nil)))
-                                                     (when (sdl:key= key :sdl-key-r) (reset_grid grid width height))
-                                                     ;         (when (sdl:key= key :sdl-key-minus) (exit))
-                                                     ;         (when (and (or (= mod 1) (= mod 2)) (sdl:key= key :sdl-key-equals)) (exit))
+                                                     (when (sdl:key= key :sdl-key-r) (reset_grid grid width height) (setf p_time nil))
                                                      )
                                     (:mouse-button-up-event (:button button :x mouse-x :y mouse-y)
                                                             (if (= button 1)
-																(progn (sdl:draw-box (sdl:rectangle :x (* (floor (/ mouse-x (floor (/ 1200 width)))) (floor (/ 1200 width)))
-																							 :y (* (floor (/ mouse-y (floor (/ 1200 height )))) (floor (/ 1200 height )))
-																							 :w (floor (/ 1200 width))
-																						     :h (floor (/ 1200 height)))
-                                                                            :color *random-color*)
-																	   (give_birth grid (floor (/ mouse-x (floor (/ 1200 width)))) (floor (/ mouse-y (floor (/ 1200 height )))))
-																	   )
+                                                              (progn (sdl:draw-box (sdl:rectangle :x (* (floor (/ mouse-x (floor (/ 1200 width)))) (floor (/ 1200 width)))
+                                                                                                  :y (* (floor (/ mouse-y (floor (/ 1200 height )))) (floor (/ 1200 height )))
+                                                                                                  :w (floor (/ 1200 width))
+                                                                                                  :h (floor (/ 1200 height)))
+                                                                                   :color *random-color*)
+                                                                     (give_birth grid (floor (/ mouse-x (floor (/ 1200 width)))) (floor (/ mouse-y (floor (/ 1200 height )))))
+                                                                     )
                                                               (format t "~&~d-- MOUSE-X -- ~d~&-- MOUSE-Y -- ~d~&" button mouse-x mouse-y)
                                                               ))
                                     (:quit-event () t)
@@ -187,9 +178,9 @@
         (setf (aref grid x y) (make-cell))
         )
       )
-    (give_birth grid 4 5)
-
-(start grid pos_x pos_y)
+    (start grid pos_x pos_y)
+    )
+  )
 
 (defun usage()
   (format t "usage: sbcl --load game_of_life.lsp [-h] width height
@@ -201,7 +192,7 @@ positional arguments:
 
 optional arguments:
   -h, --help             show this help message and exit~&"
-    )
+  )
   (exit)
   )
 
