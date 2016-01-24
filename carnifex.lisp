@@ -1,5 +1,7 @@
 (defstruct cell (gen 0) (life 0))
 
+(ql:quickload "lispbuilder-sdl")
+
 (defun neighbours (grid x y pos_x pos_y) "'add neighbours value with correct conditions' function"
   (cond ((and (= x  0) (= y 0)) (+
                                   (cell-gen (aref grid x  y))
@@ -75,28 +77,6 @@
   (setf (cell-life (aref grid x y)) (neighbours grid x y pos_x pos_y))
   )
 
-; (defun print_grid_life (grid pos_x pos_y) "TO EREASE ------ display function"
-;   (write-line "life")
-;   (dotimes (x pos_x)
-;     (dotimes (y pos_y)
-;       (write (cell-life (aref grid x y)))
-;       (format t " ")
-;       )
-;     (write-line "")
-;     )
-;   )
-; 
-; (defun print_grid_gen (grid pos_x pos_y)
-;   (write-line "gen")
-;   (dotimes (x pos_x)
-;     (dotimes (y pos_y)
-;       (write (cell-gen (aref grid x y)))
-;       (format t " ")
-;       )
-;     (write-line "")
-;     )
-;   )
-
 (defun swap_life_gen (grid pos_x pos_y) "'swap gen and life' function"
   (dotimes (x pos_x)
     (dotimes (y pos_y)
@@ -133,18 +113,6 @@
       )
   )
 
-; gen . live
-; gen = 1 ou 0
-; live = 0+ (= live_neighbours)
-; t0 : grille de départ avec gen = live
-; t1 : live = live_neighbours
-; t2 : gen = 1 ou 0 en fonction de live
-
-
-; x = pos_x = pos_y
-; y = pos_y = pos_x
-
-(ql:quickload "lispbuilder-sdl")
 
 (defparameter *random-color* sdl:*blue*)
 
@@ -154,9 +122,8 @@
               ;			  (format t "~d" (cell-gen (aref grid i j)))
               (if (= (cell-gen (aref grid i j)) 1)
                 ;				  (sdl:draw-rectangle-* :x 432 :y 360 :w 540 :h 432)
-                (sdl:draw-box (sdl:rectangle :x (floor (* 1200 (/ i width))) :y (floor (* 1200 (/ j height))) :w (floor (/ 1200 width)) :h (floor (/ 1200 height))) :color *random-color*)
+                (sdl:draw-box (sdl:rectangle :x (floor (* 1200 (/ i width))) :y (floor (* 1200 (/ j height))) :w (floor (/ 1200 width)) :h (floor (/ 1200 height))) :color (sdl:color :r 100 :g 100 :b 100))
                 (sdl:draw-box (sdl:rectangle :x (floor (* 1200 (/ i width))) :y (floor (* 1200 (/ j height))) :w (floor (/ 1200 width)) :h (floor (/ 1200 height))) :color sdl:*black*)
-					   
                 )
               )
         )
@@ -199,22 +166,8 @@
 																	   )
                                                               (format t "~&~d-- MOUSE-X -- ~d~&-- MOUSE-Y -- ~d~&" button mouse-x mouse-y)
                                                               ))
-                                    ;(setf (sdl:frame-rate) 5)
-                                    ;				 (sdl:clear-display sdl:*black*)
                                     (:quit-event () t)
                                     (:idle ()
-                                           ;										 (loop for y from 1 to (/ width 10) do
-                                           ;										 (sdl:draw-line-* () () () height)
-                                           ;											   ((loop for x from 1 to (/ height 10) do
-                                           ;													  (
-                                           ;													   (sdl:draw-line-* () () () ())
-                                           ;													   )
-                                           ;													  )
-                                           ;											   )
-
-                                           ;										 (sdl:draw-line-* 500 40 500 400)
-                                           ;										 (sdl:draw-box (sdl:rectangle-from-midpoint-* (sdl:mouse-x) (sdl:mouse-y) 20 20)
-                                           ;													   :color *random-color*)
                                            (main_loop grid width height sl_time p_time)
                                            (sdl:update-display)
                                            )
@@ -227,9 +180,6 @@
   (sb-int:with-float-traps-masked (:invalid :inexact :overflow)(draw-win grid pos_x pos_y))
   )
 
-; grid_loop grid pos_x pos_y
-; give_birth grid x y
-
 (defun create-grid (pos_x pos_y) "grid ceation and initialization function"
   (let ((grid (make-array `(,pos_x ,pos_y))))
     (dotimes (x pos_x)
@@ -238,29 +188,8 @@
         )
       )
     (give_birth grid 4 5)
-;    (setf (cell-gen (aref grid 5 6)) 1)
-;    (setf (cell-gen (aref grid 6 6)) 1)
-;    (setf (cell-gen (aref grid 6 5)) 1)
-;    (setf (cell-gen (aref grid 6 4)) 1)
 
 (start grid pos_x pos_y)
-
-    ; a virer --v
-;    (print_grid_gen grid pos_x pos_y)
-;    (print_grid_life grid pos_x pos_y)
-
-;    (loop for aaaa from 0 to 5
-;          do (grid_loop grid pos_x pos_y)
-;          do (print_grid_gen grid pos_x pos_y)
-;          do (print_grid_life grid pos_x pos_y)
-;          )
-    ; fonction qui creer la fenetre et tout
-    ;(start grid pos_x pos_y)
-    ; a virer ---v
-;    (print_grid_gen grid pos_x pos_y)
-;    (print_grid_life grid pos_x pos_y)
-    )
-  )
 
 (defun usage()
   (format t "usage: sbcl --load game_of_life.lsp [-h] width height
