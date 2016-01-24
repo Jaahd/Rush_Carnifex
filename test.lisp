@@ -1,6 +1,6 @@
 (defstruct cell (gen 0) (life 0))
 
-(defun neighbours (grid x y)
+(defun neighbours (grid x y height width)
   (cond ((and (= x  0) (= y 0)) (+ 
                                   (cell-gen (aref grid x  y))
                                   (cell-gen (aref grid (+ x 1) y))
@@ -59,13 +59,9 @@
         )
   )
 
-(defun check_neighbours (grid x y)
-  (let ((live_neighbours (neighbours grid x y)))
-    ; fonction qui modifier live en fonction de live_neighbours
-    (if (or (and (= (aref grid x y) 1) (= live_neighbours (or 2 3))) (and (= (aref grid x y) 0) (= live_neighbours 3)))
-      (setf (aref grid x y) 1)
-      (setf (aref grid x y) 0)
-      ))
+(defun check_neighbours (grid x y height width)
+  (format t "x: ~a; y: ~a; width: ~a; hwight: ~a~%" x y width height)
+      (setf (cell-life (aref grid x y)) (neighbours grid x y height width))
   )
 
 (defun print_grid_life (grid height width)
@@ -94,8 +90,10 @@
   (write-line "swap")
   (dotimes (x width)
     (dotimes (y height)
-      (setf (cell-gen (aref grid x y)) (cell-life (aref grid x y)))
-      )
+      (if (or (= (cell-life (aref grid x y)) 3) (= (cell-life (aref grid x y)) 4))
+        (setf (cell-gen (aref grid x y)) 1)
+        (setf (cell-gen (aref grid x y)) 0)
+        ))
     )
   )
 
@@ -111,15 +109,24 @@
     (setf (cell-gen (aref grid 6 6)) 1)
     (setf (cell-gen (aref grid 6 5)) 1)
     (setf (cell-gen (aref grid 6 4)) 1)
+    (setf (cell-gen (aref grid 9 9)) 1)
 
-    (setf (cell-life (aref grid 9 9)) 9)
     (print_grid_gen grid lines columns)
     (print_grid_life grid lines columns)
-    (write-line "")
-    ; ajouter colones extérieurs
-    ;    (loop for x from 1 to (- columns 1)
-    ;          do (loop for y from 1 to (- lines 1)
-    ;                   do (check_neighbours grid x y)))
+
+    (write-line "check")
+    (loop for x from 0 to (- lines 1)
+          do (loop for y from 0 to (- columns 1)
+                   do (progn (print lines) (print columns)
+                    (check_neighbours grid x y (- lines 1) (- columns 1)))
+                   )
+          )
+;    (dotimes (x lines)
+;      (dotimes (y columns)
+;        (format t "~a ~a ~%" x y)
+;        (check_neighbours grid x y 9 9)
+;        )
+;      )
     (print_grid_gen grid lines columns)
     (print_grid_life grid lines columns)
     (swap_life_gen grid lines columns)
